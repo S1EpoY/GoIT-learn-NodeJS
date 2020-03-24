@@ -102,7 +102,7 @@ node index.js --action="list"
 ```
 
 >*Результат выполнения кода:*
-![ACTION LIST IMG EXAMPLE](https://prnt.sc/rm5erc "action=list")
+![ACTION LIST IMG EXAMPLE](https://picua.org/images/2020/03/25/139adbbf4ea19cc6f63ad5b88e99f8bd.png "action = list")
 
 ```shell
 # Получаем контакт по id
@@ -110,7 +110,7 @@ node index.js --action="get" --id=5
 ```
 
 >*Результат выполнения кода:*
-![ACTION GET IMG EXAMPLE](https://prnt.sc/rm5fbc "action=get")
+![ACTION GET IMG EXAMPLE](https://picua.org/images/2020/03/25/4485f6725b3ddd9736ef07e342589952.png "action = get")
 
 ```shell
 # Добавялем контакт
@@ -118,7 +118,7 @@ node index.js --action="add" --name="Mango" --email="mango@gmail.com" --phone="3
 ```
 
 >*Результат выполнения кода:*
-![ACTION ADD IMG EXAMPLE](https://prnt.sc/rm5fo0 "action=add")
+![ACTION ADD IMG EXAMPLE](https://picua.org/images/2020/03/25/f748830c8d47d301270c26a0ae69ac3e.png "action = add")
 
 ```shell
 # Удаляем контакт
@@ -126,4 +126,4 @@ node index.js --action="remove" --id=3
 ```
 
 >*Результат выполнения кода:*
-![ACTION REMOVE IMG EXAMPLE](https://prnt.sc/rm5g1b "action=remove")
+![ACTION REMOVE IMG EXAMPLE](https://picua.org/images/2020/03/25/5d6c6072d6ab29d7085797ca1f3616af.png "action = remove")
