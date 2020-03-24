@@ -99,26 +99,31 @@ invokeAction(argv);
 ```shell
 # Получаем и выводим весь список контакстов в виде таблицы (console.table)
 node index.js --action="list"
+```
 
-*Результат выполнения кода:*
+>*Результат выполнения кода:*
 ![ACTION LIST IMG EXAMPLE](https://prnt.sc/rm5erc "action=list")
 
+```shell
 # Получаем контакт по id
 node index.js --action="get" --id=5
+```
 
-*Результат выполнения кода:*
+>*Результат выполнения кода:*
 ![ACTION GET IMG EXAMPLE](https://prnt.sc/rm5fbc "action=get")
 
+```shell
 # Добавялем контакт
 node index.js --action="add" --name="Mango" --email="mango@gmail.com" --phone="322-22-22"
+```
 
-*Результат выполнения кода:*
+>*Результат выполнения кода:*
 ![ACTION ADD IMG EXAMPLE](https://prnt.sc/rm5fo0 "action=add")
 
+```shell
 # Удаляем контакт
 node index.js --action="remove" --id=3
-
-*Результат выполнения кода:*
-![ACTION REMOVE IMG EXAMPLE](https://prnt.sc/rm5g1b "action=remove")
-
 ```
+
+>*Результат выполнения кода:*
+![ACTION REMOVE IMG EXAMPLE](https://prnt.sc/rm5g1b "action=remove")
