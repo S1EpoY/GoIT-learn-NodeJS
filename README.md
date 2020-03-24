@@ -102,6 +102,7 @@ node index.js --action="list"
 ```
 
 >*Результат выполнения кода:*
+
 ![ACTION LIST IMG EXAMPLE](https://picua.org/images/2020/03/25/139adbbf4ea19cc6f63ad5b88e99f8bd.png "action = list")
 
 ```shell
@@ -110,6 +111,7 @@ node index.js --action="get" --id=5
 ```
 
 >*Результат выполнения кода:*
+
 ![ACTION GET IMG EXAMPLE](https://picua.org/images/2020/03/25/4485f6725b3ddd9736ef07e342589952.png "action = get")
 
 ```shell
@@ -118,6 +120,7 @@ node index.js --action="add" --name="Mango" --email="mango@gmail.com" --phone="3
 ```
 
 >*Результат выполнения кода:*
+
 ![ACTION ADD IMG EXAMPLE](https://picua.org/images/2020/03/25/f748830c8d47d301270c26a0ae69ac3e.png "action = add")
 
 ```shell
@@ -126,4 +129,5 @@ node index.js --action="remove" --id=3
 ```
 
 >*Результат выполнения кода:*
+
 ![ACTION REMOVE IMG EXAMPLE](https://picua.org/images/2020/03/25/5d6c6072d6ab29d7085797ca1f3616af.png "action = remove")
