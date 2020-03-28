@@ -1,0 +1,24 @@
+{
+  "name": "hw-01-node-basics",
+  "version": "1.0.0",
+  "description": "node-basics",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [
+    "basics",
+    "node.js",
+    "node",
+    "js"
+  ],
+  "author": "Baryshnilov Serhii <slepoy1992@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  },
+  "dependencies": {
+    "yargs": "^15.3.1"
+  }
+}
