@@ -1,64 +1,63 @@
-﻿# Домашнее задание 1 (GoIT-learn-NodeJS-HW01-basics)
+﻿# GoIT-learn-NodeJS-basics
 
-Создно ветку `01-node-basics` из ветки `master`.
 
-## Шаг 1
+## Работа с REST API
 
-- Проведена инициализфция npm в проекте
-- В корне проекта создан файл `index.js`
-- Инициализирован пакет [nodemon](https://www.npmjs.com/package/nodemon) как зависимость
-  разработки (devDependencies)
-- В файле `package.json` добавлены "скрипты" для запуска `index.js`
-  - Скрипт `start` который запускает `index.js` с помощью `node`
-  - Скрипт `dev` который запускает `index.js` с помощью `nodemon`
+REST API поддерживает следующие рауты:
 
-## Шаг 2
+### @ GET /api/contacts
 
-В корне проекта создано папку `db`. Для хранения контактов используеться
-файл [contacts.json](./contacts.json), который лежит в папке `db`.
+- ничего не получает
+- вызывает функцию `listContacts()` для работы с файлом `contacts.json`
+- возвращает массив всех контактов в json-формате со статусом `200`
 
-В корне проекта создано файл `contacts.js`.
+### @ GET /api/contacts/:contactId
 
-- Сделано импорт модулей `fs` и `path` для работы с файловой системой
-- Создано переменную `contactsPath` внутри которой указан путь к файлу `contacts.json`.
-  Для составления пути ипользуються методы модуля `path`.
-- Добавлены функции для работы с коллекцией контактов. В функциях использован модуль
-  `fs` и его методы `readFile()` и `writeFile()`
-- Сделано экспорт созданных функций через `module.exports`
+- Не получает `body`
+- Получает параметр `contactId`
+- вызывает функцию `getContactById(id)` для работы с файлом `contacts.json`
+- если такой `id` есть, возвращает обьект контакта в json-формате со статусом `200`
+- если такого `id` нет, возвращает json-файл с ключом `{"message": "Not found"}` и
+  статусом `404`
 
-```js
-// contacts.js
+### @ POST /api/contacts
 
-// TODO: задокументировано каждую функцию
-function listContacts() {
-  // ...мой код
-}
+- Получает `body` в формате `{name, email, phone}`
+- Если в `body` нет каких-то обязательных полей, возарщает json-файл с ключом
+  `{"message": "missing required name field"}` и статусом `400`
+- Если с `body` все хорошо, добавляет уникальный идентификатор в обьект контакта
+- Вызывает функцию `addContact({name, email, phone})` для сохранения контакта в файле `contacts.json`
+- По результату работы функции возвращает обьект с добавленным `id`
+  `{id, name, email, phone}` и статусом `201`
 
-function getContactById(contactId) {
-  // ...мой код
-}
+### @ DELETE /api/contacts/:contactId
 
-function addContact({ name, email, phone }) {
-  // ...мой код
-}
+- Не получает `body`
+- Получает параметр `contactId`
+- вызывает функцию `removeContact(id)` для работы с json-файлом `contacts.json`
+- если такой `id` есть, возвращает json формата `{"message": "contact deleted"}` и
+  статусом `200`
+- если такого `id` нет, возвращает json-файл с ключом `{"message": "Not found"}` и
+  статусом `404`
 
-function removeContact(contactId) {
-  // ...мой код
-}
-```
+### @ PATCH /api/contacts/:contactId
 
-## Шаг 3
+- Получает `body` в json-формате c обновлением любых полей `name, email и phone`
+- Если `body` нет, возарщает json с ключом `{"message": "missing fields"}` и
+  статусом `400`
+- Если с `body` все хорошо, вызывает функцию `updateContact(id)` для
+  обновления контакта в файле `contacts.json`
+- По результату работы функции возвращает обновленный обьект контакта и
+  статусом `200`. В противном случае, возвращает json-файл с ключом
+  `{"message": "Not found"}` и статусом `404`
 
-Импортирован модуль `contacts.js` в файле `index.js` и проверены на
-работоспособность функции для работы с контактами.
 
-## Шаг 4
+## Использование "Yargs" в сборке
 
-В файле `index.js` импортирован пакет `yargs` для удобного парса аргументов
-командной строки. Используеться готовая функция `invokeAction()` которая получает
-тип выполняемого действия и необходимые аргументы. Функция вызывает
-соответствующий метод из файла `contacts.js` передавая ему необходимые
-аргументы.
+В сборке используеться пакет [yargs](https://www.npmjs.com/package/yargs) для удобного парса аргументов
+командной строки. Функция `invokeAction()` получает тип выполняемого действия и 
+необходимые аргументы. Функция вызывает соответствующий метод из файла `contacts.js` 
+передавая ему необходимые аргументы.
 
 ```js
 // index.js
@@ -79,6 +78,10 @@ function invokeAction({ action, id, name, email, phone }) {
       // ... name email phone
       break;
 
+    case "update":
+      // ... id name email phone
+      break;
+
     case "remove":
       // ... id
       break;
@@ -91,10 +94,8 @@ function invokeAction({ action, id, name, email, phone }) {
 invokeAction(argv);
 ```
 
-## Шаг 5
 
-После запуска команд в терминале сделаны скриншоты результата выполнения
-каждой команды согласно условиям.
+## Результаты выполнения каждой команды:
 
 ```shell
 # Получаем и выводим весь список контакстов в виде таблицы (console.table)
@@ -122,6 +123,15 @@ node index.js --action="add" --name="Mango" --email="mango@gmail.com" --phone="3
 >*Результат выполнения кода:*
 
 ![ACTION ADD IMG EXAMPLE](https://picua.org/images/2020/03/25/f748830c8d47d301270c26a0ae69ac3e.png "action = add")
+
+```shell
+# Обновляем существующий контакт
+node index.js --action="update" --id="14" --name="Johnny Boy"
+```
+
+>*Результат выполнения кода:*
+
+![ACTION ADD IMG EXAMPLE](https://picua.org/images/2020/04/01/0132d434543ddd48730dec287591303f.png "action = update")
 
 ```shell
 # Удаляем контакт

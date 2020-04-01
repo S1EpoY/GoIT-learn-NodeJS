@@ -1,34 +1,28 @@
+const express = require('express');
+const logger = require('morgan');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const apiContactsRoutes = require('./api/routs/contacts');
+
 const argv = require('yargs').argv;
-const handleContactsMethods = require('./contacts');
+const { invokeAction } = require('./contacts');
 
-const listContacts = handleContactsMethods.listContacts;
-const getContactById = handleContactsMethods.getContactById;
-const addContact = handleContactsMethods.addContact;
-const removeContact = handleContactsMethods.removeContact;
+const app = express();
 
-function invokeAction({ action, id, name, email, phone }) {
-    switch (action) {
-      case 'list':
-        console.table(listContacts());
-        break;
-  
-      case 'get':
-        console.table(getContactById(id));
-        break;
-  
-      case 'add':
-        addContact({ name, email, phone });
-        console.table(listContacts());
-        break;
-  
-      case 'remove':
-        removeContact(id);
-        console.table(listContacts());
-        break;
-  
-      default:
-        console.warn('\x1B[31m Unknown action type!');
-    }
-  }
-  
-  invokeAction(argv);
+dotenv.config();
+
+app.use(express.json());
+app.use(logger('combined'));
+app.use(cors());
+
+app.use('/api', apiContactsRoutes);
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, (err) => {
+  if (err) throw err;
+  console.log(`Server is runing on port ${PORT}`)
+});
+
+
+invokeAction(argv);

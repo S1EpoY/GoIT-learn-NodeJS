@@ -348,3 +348,9 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Instructional documentation with a tasks
+*documentation/
+
+#Environment config
+.env
