@@ -4,16 +4,26 @@ const fs = require('fs');
 const contactsPath = path.join(__dirname, 'db', 'contacts.json');
 
 
+
+/**
+  * returns a contact list database
+  */
 function listContacts() {
-    console.log('Contacts was readed!')
-    return JSON.parse(
-        fs.readFileSync(contactsPath, 'utf-8', async (err) => {
+    const contacts =  JSON.parse(
+        fs.readFileSync(contactsPath, 'utf-8', (err) => {
             if (err) throw err;
         }
     ));
+
+    console.log('Contacts was readed!');
+    
+    return contacts;
 };
 
 
+/**
+ * finds contact by specified id
+ */
 function getContactById(contactId) {
     const contacts = listContacts();
     for(let i = 0; i < contacts.length; i++) {
@@ -27,9 +37,11 @@ function getContactById(contactId) {
 };
 
 
-function addContact(obj = { name, email, phone }) {
+/**
+ * adds a new contact to the contact list database
+ */
+function addContact(newContact = { id, name, email, phone }) {
     const contacts = listContacts();
-    const newContact = { id: contacts.length + 1, ...obj }
 
     fs.writeFileSync(contactsPath, JSON.stringify([...contacts, newContact]), (err) => {
         if (err) throw err;
@@ -39,6 +51,37 @@ function addContact(obj = { name, email, phone }) {
 };
 
 
+/**
+ * updates the contact with the specified id
+ */
+function updateContact(updatedContact = { id, ...rest }) {
+    const {id} = updatedContact;
+    const desiredResult = getContactById(id);
+    if(desiredResult === null) return null;
+    console.log('updatedContact', updatedContact)
+
+    const contacts = listContacts();
+    let finedContact = null;
+    
+    for(let i = 0; i < contacts.length; i++) {
+        if(contacts[i].id === id) {
+            Object.assign(contacts[i], updatedContact);
+            finedContact = {...contacts[i]};
+            console.log(`Contact with id:${id} was update!`);
+        }; 
+    }
+
+    fs.writeFileSync(contactsPath, JSON.stringify([...contacts]), (err) => {
+        if (err) throw err;
+    });
+
+    return finedContact; 
+}
+
+
+/**
+ * removes the contact with the specified id
+ */
 function removeContact(contactId) {
     const contacts = listContacts();
     const newContacts = [];
@@ -56,7 +99,56 @@ function removeContact(contactId) {
         if (err) throw err;
     });
     console.log(`Contact with id:${contactId} was remove!`);
+    return true;
 };
+
+
+/**
+ * calls the appropriate method for working with the contacts database passing him the necessary arguments
+ */
+function invokeAction({
+    action,
+    id,
+    name,
+    email,
+    phone
+  }) {
+    switch (action) {
+      case 'list':
+        console.table(listContacts());
+        break;
+  
+      case 'get':
+        console.table(getContactById(id));
+        break;
+  
+      case 'add':
+        addContact({
+          name,
+          email,
+          phone
+        });
+        console.table(listContacts());
+        break;
+  
+      case 'update':
+        console.table(updateContact({
+          id,
+          name
+          // email,
+          // phone
+        }));
+        break;
+  
+      case 'remove':
+        removeContact(id);
+        console.table(listContacts());
+        break;
+  
+      default:
+        console.warn('\x1B[31m Unknown action type!');
+    }
+  }
 
 
 
@@ -64,5 +156,7 @@ module.exports = {
     listContacts,
     getContactById,
     addContact,
-    removeContact
+    updateContact,
+    removeContact,
+    invokeAction
 }
