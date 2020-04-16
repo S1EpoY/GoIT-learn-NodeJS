@@ -139,7 +139,6 @@ class ContactController {
   async deleteContactByIdx(req, res) {
     try {
       const {contactIdx} = await req.params;
-      console.log('contactIdx', contactIdx)
       const deletedContact = await contactModel.findOneAndDelete({idx: contactIdx});
 
       if (!deletedContact) return res.status(404).json({"message": "Not found"});

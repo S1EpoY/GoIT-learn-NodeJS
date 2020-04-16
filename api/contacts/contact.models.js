@@ -14,33 +14,24 @@ contactSchema.statics.updateIdxContacts = updateIdxContacts;
 
 
 async function createWithIdx(updateParams){
-    const idx = await contactModel.countDocuments('name') + 1;
+    const idx = await this.countDocuments('name') + 1;
     const newContact = {idx, ...updateParams};
 
-    await contactModel.create(newContact); 
+    return await this.create(newContact); 
 }
     
     
 async function findContactByIdAndUpdate(contactId, updateParams) {
-    try{
-        return await this.findByIdAndUpdate(contactId, {$set: updateParams}, {new: true}); 
-    } catch(err) {
-        console.log(err);
-    }
+        return await this.findByIdAndUpdate(contactId, {$set: updateParams}, {new: true});
 }
 
 async function updateIdxContacts() {
-    try {
-      const updateIdx = async (contacts, i) => await contactModel.findOneAndUpdate({name: contacts[i].name}, {idx: i + 1}, {new: true});
-      const contacts = await contactModel.find();
+      const updateIdx = async (contacts, i) => await this.findOneAndUpdate({name: contacts[i].name}, {idx: i + 1}, {new: true});
+      const contacts = await this.find();
 
       for(let i = 0; i < contacts.length; i++) {
         updateIdx(contacts, i);
       }
-
-    } catch(err) {
-      console.log(err);
-    }
   }
 
 //contacts
