@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const apiContactsRoutes = require('./contacts/contact.router');
 const userRoutes = require('./users/user.router');
-const {getCurrentUser} = require('./users/user.controller')
+const {userAuth, getCurrentUser} = require('./users/user.controller')
 
 dotenv.config();
 
@@ -19,7 +19,7 @@ app.use(cors());
 
 app.use('/api/contacts', apiContactsRoutes);
 app.use('/auth', userRoutes);
-app.use('/users/current', getCurrentUser);
+app.use('/users/current', userAuth, getCurrentUser);
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,7 +27,8 @@ async function startServer() {
     try {
         await mongoose.connect(process.env.MONGODB_URL, { 
             useUnifiedTopology: true, 
-            useNewUrlParser: true, 
+            useNewUrlParser: true,
+            useCreateIndex: true, 
             useFindAndModify: false 
         });
         

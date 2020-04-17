@@ -99,7 +99,7 @@ class UserController {
       }
       
       const user = await userModel.findById(userId);
-      if(!user || user.token !== token) return res.status(401).json({message: "Not authorized"})
+      if(!user || user.token != token) return res.status(401).json({message: "Not authorized"})
       
       req.user = user;
 
@@ -129,9 +129,18 @@ class UserController {
 
 
   /**
-   * 
+   * function take current user data
+   * if user exists return json with key `{"email": "example@email.com", "subscription": "free"}` and send status 200
    */
-  async getCurrentUser(req, res) {};
+  async getCurrentUser(req, res) {
+    try {
+      const {email, subscription} = req.user;
+      
+      res.status(200).json({email, subscription});
+    } catch (err) {
+      res.sendStatus(400);
+    }
+  };
 
 
 
