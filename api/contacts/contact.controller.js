@@ -1,5 +1,5 @@
 const Joi = require("joi");
-const contactModel = require('./contact.models');
+const contactModel = require('./contact.model');
 const { Types: { ObjectId } } = require('mongoose');
 
 
@@ -25,7 +25,7 @@ class ContactController {
    */
   async getContactById(req, res) {
     try {
-      const { contactId } = await req.params;
+      const { contactId } = req.params;
       const contact = await contactModel.findById(contactId);
 
       if (!contact) return res.status(404).json({message: "Not found"});
@@ -60,7 +60,7 @@ class ContactController {
    */
   async patchContactById(req, res) {
     try {
-      const {contactId} = await req.params;
+      const {contactId} = req.params;
       const contactToUpdate = await contactModel.findContactByIdAndUpdate(contactId, req.body);
       
       if (!contactToUpdate) return res.status(404).json({ message: "Not found" });
@@ -79,7 +79,7 @@ class ContactController {
    */
   async deleteContactById(req, res) {
     try {
-      const {contactId} = await req.params;
+      const {contactId} = req.params;
       const deletedContact = await contactModel.findByIdAndDelete(contactId);
 
       if (!deletedContact) return res.status(404).json({"message": "Not found"});
@@ -100,7 +100,7 @@ class ContactController {
    */
   async getContactByIdx(req, res) {
     try {
-      const { contactIdx } = await req.params;
+      const { contactIdx } = req.params;
       const contact = await contactModel.findOne({idx: contactIdx});
 
       if (!contact) return res.status(404).json({message: "Not found"});
@@ -119,7 +119,7 @@ class ContactController {
   */
   async patchContactByIdx(req, res) {
     try {
-      const {contactIdx} = await req.params;
+      const {contactIdx} = req.params;
       const contactToUpdate = await contactModel.findOneAndUpdate({idx: contactIdx}, req.body, {new: true});
       
       if (!contactToUpdate) return res.status(404).json({ message: "Not found" });
@@ -138,7 +138,7 @@ class ContactController {
    */
   async deleteContactByIdx(req, res) {
     try {
-      const {contactIdx} = await req.params;
+      const {contactIdx} = req.params;
       const deletedContact = await contactModel.findOneAndDelete({idx: contactIdx});
 
       if (!deletedContact) return res.status(404).json({"message": "Not found"});
@@ -154,11 +154,12 @@ class ContactController {
 
   /**
    * validation parameters ID of contact 
+   * if contact id is invalid return json with key {message: "missing fields"} and send status 400
    */
   async validateId(req, res, next) {
-    const id = await req.params.contactId;
+    const {contactId} = req.params;
 
-    if (!ObjectId.isValid(id)) return res.status(400).json({message: "missing fields"});
+    if (!ObjectId.isValid(contactId)) return res.status(400).json({message: "missing fields"});
 
     next()
   }

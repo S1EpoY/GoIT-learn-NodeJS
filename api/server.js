@@ -3,7 +3,9 @@ const logger = require('morgan');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
-const apiContactsRoutes = require('./contacts/contact.routs');
+const apiContactsRoutes = require('./contacts/contact.router');
+const userRoutes = require('./users/user.router');
+const {getCurrentUser} = require('./users/user.controller')
 
 dotenv.config();
 
@@ -16,6 +18,8 @@ app.use(logger('combined'));
 app.use(cors());
 
 app.use('/api/contacts', apiContactsRoutes);
+app.use('/auth', userRoutes);
+app.use('/users/current', getCurrentUser);
 
 const PORT = process.env.PORT || 3000;
 

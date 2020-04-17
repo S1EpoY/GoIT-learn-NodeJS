@@ -1,5 +1,4 @@
 const { Router } = require("express");
-const contactRouter = Router();
 
 const {
   getAllContacts,
@@ -13,7 +12,9 @@ const {
   validateId,
   validateNewContact,
   validateUpdatedContact
-} = require('./contact.controllers');
+} = require('./contact.controller');
+
+const contactRouter = Router();
 
 /**
  * api routs
