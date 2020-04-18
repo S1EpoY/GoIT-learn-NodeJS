@@ -18,7 +18,7 @@ app.use(cors());
 app.use('/api/contacts', apiContactsRoutes);
 
 const PORT = process.env.PORT || 3000;
-const MONGODB_URL = "mongodb+srv://admin:QHEmWVrvOkCkXMh5@cluster0-ok9sn.mongodb.net/db-contacts" || process.env.MONGODB_URL
+const MONGODB_URL = process.env.MONGODB_URL || "mongodb+srv://admin:QHEmWVrvOkCkXMh5@cluster0-ok9sn.mongodb.net/db-contacts";
 
 async function startServer() {
     try {
