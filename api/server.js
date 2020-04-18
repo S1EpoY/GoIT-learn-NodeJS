@@ -22,10 +22,11 @@ app.use('/auth', userRoutes);
 app.use('/users/current', userAuth, getCurrentUser);
 
 const PORT = process.env.PORT || 3000;
+const MONGODB_URL = process.env.MONGODB_URL || "mongodb+srv://admin:QHEmWVrvOkCkXMh5@cluster0-ok9sn.mongodb.net/db-contacts";
 
 async function startServer() {
     try {
-        await mongoose.connect(process.env.MONGODB_URL, { 
+        await mongoose.connect(MONGODB_URL, { 
             useUnifiedTopology: true, 
             useNewUrlParser: true,
             useCreateIndex: true, 
