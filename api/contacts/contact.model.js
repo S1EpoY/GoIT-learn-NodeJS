@@ -1,12 +1,15 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 const {Schema, model} = mongoose;
 
 const contactSchema = new Schema({
     idx: {type: Number},
     name: {type: String, required: true},
     email: {type: String, required: true},
-    phone: {type: String, required: true}   
+    phone: {type: String, required: true}
 });
+
+contactSchema.plugin(mongoosePaginate);
 
 contactSchema.statics.createWithIdx = createWithIdx;   
 contactSchema.statics.findContactByIdAndUpdate = findContactByIdAndUpdate;   
@@ -34,7 +37,7 @@ async function updateIdxContacts() {
       }
   }
 
-//contacts
+// create contacts collection
 const contactModel = model('Contact', contactSchema);
 
 module.exports = contactModel;
