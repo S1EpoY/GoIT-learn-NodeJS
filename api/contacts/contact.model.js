@@ -6,7 +6,8 @@ const contactSchema = new Schema({
     idx: {type: Number},
     name: {type: String, required: true},
     email: {type: String, required: true},
-    phone: {type: String, required: true}
+    phone: {type: String, required: true},
+    // user: { type: mongoose.Schema.ObjectId, ref: 'User' }
 });
 
 contactSchema.plugin(mongoosePaginate);

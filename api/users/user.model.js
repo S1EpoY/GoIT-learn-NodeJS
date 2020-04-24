@@ -1,32 +1,44 @@
 const mongoose = require('mongoose');
-const {Schema, model} = mongoose;
-const mongoosePaginate = require('mongoose-paginate-v2');
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+
+const {Schema, model} = mongoose;
 
 const userSchema = new Schema({
   email: {type: String, required: true, unique: true},
   password: {type: String, required: true},
+  avatarURL: String,
   subscription: {
     type: String,
     enum: ["free", "pro", "premium"],
     default: "free"
   },
   token: String,
+  // contact: { type: mongoose.Schema.ObjectId, ref: 'Contact' }
 });
 
-userSchema.plugin(mongoosePaginate);
-
+userSchema.statics.findUserByIdAndUpdate = findUserByIdAndUpdate;
 userSchema.statics.findUserByEmail = findUserByEmail;
 userSchema.statics.verifyToken = verifyToken;
 userSchema.statics.updateToken = updateToken;
 userSchema.statics.deleteToken = deleteToken;
+
+dotenv.config();
+
+async function findUserByIdAndUpdate(id, updateParams) {
+  return await this.findByIdAndUpdate(id, {$set: updateParams}, {runValidators: true, new: true});
+}
 
 async function findUserByEmail(email) {
   return await this.findOne({email});
 }
 
 async function verifyToken(token) {
-  return await jwt.verify(token, process.env.JWT_SECRET).id;
+  try {
+    return await jwt.verify(token, process.env.JWT_SECRET).id;
+  } catch {
+    return null
+  }
 }
 
 async function updateToken(id) {

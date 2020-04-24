@@ -8,22 +8,25 @@ const {
   deleteContactById,
   getContactByIdx,
   patchContactByIdx,
-  deleteContactByIdx,
-  validateId,
+  deleteContactByIdx
+} = require('./contact.controller');
+
+const {
+  validateContactIdParams,
   validateNewContact,
   validateUpdatedContact
-} = require('./contact.controller');
+} = require('../helpers/validator')
 
 const contactRouter = Router();
 
 /**
- * api routs
+ * routs with path '/api/contacts'
  */
 contactRouter.get("/", getAllContacts);
-contactRouter.get("/:contactId", validateId, getContactById);
+contactRouter.get("/:contactId", validateContactIdParams, getContactById);
 contactRouter.post("/", validateNewContact, postNewContact);
-contactRouter.patch("/:contactId", validateId, validateUpdatedContact, patchContactById);
-contactRouter.delete("/:contactId", validateId, deleteContactById);
+contactRouter.patch("/:contactId", validateContactIdParams, validateUpdatedContact, patchContactById);
+contactRouter.delete("/:contactId", validateContactIdParams, deleteContactById);
 
 contactRouter.get("/idx/:contactIdx", getContactByIdx);
 contactRouter.patch("/idx/:contactIdx", validateUpdatedContact, patchContactByIdx);

@@ -5,29 +5,21 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const apiContactsRoutes = require('./contacts/contact.router');
 const userRoutes = require('./users/user.router');
-
-const {
-    userAuth, 
-    getCurrentUser, 
-    validateUserSubData, 
-    updateDataUsers
-} = require('./users/user.controller')
-
-dotenv.config();
+const userAuthRoutes = require('./users/user.auth.router');
 
 const app = express();
 
 dotenv.config();
+
+app.use(express.static(__dirname + '/public'));
 
 app.use(express.json());
 app.use(logger('combined'));
 app.use(cors());
 
 app.use('/api/contacts', apiContactsRoutes);
-app.use('/auth', userRoutes);
-
-app.patch('/users', validateUserSubData, updateDataUsers); 
-app.get('/users/current', userAuth, getCurrentUser);    
+app.use('/auth', userAuthRoutes);
+app.use('/users', userRoutes);    
 
 const PORT = process.env.PORT || 8080;
 

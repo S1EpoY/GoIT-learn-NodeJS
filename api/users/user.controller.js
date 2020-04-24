@@ -1,8 +1,6 @@
-const { Types: { ObjectId } } = require('mongoose');
-const bcryptjs = require('bcryptjs')
-const Joi = require("joi");
+const bcryptjs = require('bcryptjs');
+const fs = require('fs')
 const userModel = require('./user.model');
-
 
 class UserController {
   constructor() {
@@ -30,7 +28,11 @@ class UserController {
       if(existingEmail) return res.status(400).json({message: "Email in use"});
       
       const passwordHash = await bcryptjs.hash(password, this._costFactor);
-      const newUser = await userModel.create({email, password: passwordHash});
+      const newUser = await userModel.create({
+        email, 
+        password: passwordHash, 
+        avatarURL: req.file.path
+      });
 
       const updatedUser = await userModel.updateToken(newUser._id);
 
@@ -92,16 +94,16 @@ class UserController {
       const token = authHeader.replace("Bearer ", "");
       
       const userId = await userModel.verifyToken(token);
-      if(!userId) return res.status(401).json({message: "Not authorized"});
+      if(!userId) return res.status(401).json({message: "Not authorized"}); 
       
       const user = await userModel.findById(userId);
-      if(!user || user.token !== token) return res.status(401).json({message: "Not authorized"})
+      if(!user || user.token !== token) return res.status(401).json({message: "Not authorized"});
       
       req.user = user;
 
       next();
     } catch (err) {
-      res.sendStatus(400);
+      next(err);
     }
   }
 
@@ -109,7 +111,7 @@ class UserController {
   /**
    * function logout user
    * find user by id in user model
-   * if user dosen`t exist return json wuth key `{"message": "Not authorized"}` and send status 401
+   * if user dosen`t exist return json with key `{"message": "Not authorized"}` and send status 401
    * otherwise delete token in current user and return json with key `{"message": "Logout success"}` and send status 200
    */
   async userLogout(req, res) {
@@ -141,10 +143,10 @@ class UserController {
 
   /**
    * function update user subscription by email
-   * if user doesn`t exist return json wuth key `{"message": "Not authorized"}` and send status 401
-   * otherwise update field "subscription" in current user and return json with key `{"email": "updatedUserEmail", "subscription": "updatedUserSubscription"}` and send status 200
+   * update field "subscription" in current user and return json with key `{"email": "updatedUserEmail", "subscription": "updatedUserSubscription"}` and send status 200
+   * if user doesn`t exist return json with key `{"message": "Not authorized"}` and send status 401
    */
-  async updateDataUsers(req, res) {
+  async updateUserSubscription(req, res) {
     try {
       const {email} = req.body;
       const {sub} = req.query;
@@ -153,7 +155,7 @@ class UserController {
 
       if(!user || !sub ) return res.sendStatus(401);
 
-      const updatedUser = await userModel.findByIdAndUpdate(user._id, {subscription: sub}, {runValidators: true, new: true});
+      const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {subscription: sub});
 
       return res.status(200).json({
           email: updatedUser.email,
@@ -163,60 +165,38 @@ class UserController {
       res.sendStatus(400);
     }
   }
-
-
-  /**
-  * validation signIn parameters user 
-  * if the body does not have any required fields, returns json with the key `{"message":"Missing required fields"}` and send status 422
-  */
-  async validateUserKeys(req, res, next) {
-    try {
-      const userRules = Joi.object().keys({
-        email: Joi.string().email().required(),
-        password: Joi.string().regex(/^[a-zA-Z0-9]{4,16}$/).alphanum().min(4).max(16).required() 
-      });
-
-      await Joi.validate(req.body, userRules);
-
-      next();
-    } catch {
-      res.status(422).json({message:"Missing required fields"});
-    }
-  };
-
+  
 
   /**
-  * validation updated subscription parameters user 
-  * if the body does not have any required fields, returns json with the key `{"message":"Missing required fields"}` and send status 422
-  */
-  async validateUserSubData(req, res, next) {
+   * function is middleware for delete previous avatar-image before added next
+   * take object 'user' from request which should have field 'avaterURL'
+   */
+  checkAndDelPrevIMG(req, _, next) {
     try {
-      const bodyRules = Joi.object({
-        email: Joi.string().email().required(),
-      });
-
-      const queryRules = Joi.string().required();
-
-      await Joi.validate(req.body, bodyRules);
-      await Joi.validate(req.query.sub, queryRules);
+      const {avatarURL} = req.user;
+      if(avatarURL) fs.promises.unlink(avatarURL);
 
       next();
-    } catch {
-      res.status(422).json({message:"Missing required fields"});
+    } catch(err) {
+      next(err);
     }
   };
   
 
   /**
-   * validation parameters ID of user
-   * if user id is invalid return json with key `{"message": "missing fields"}` and send status 400
+   * function update path to user avatar
+   * update field 'avatarURL' in current user and return json with key {'avatarURL': 'exemple.URL'} and sen status 200
    */
-  async validateId(req, res, next) {
-    const userId = req.user._id;
+  async updateUserIMG(req, res) {
+    try {
+      const updatedUser = await userModel.findUserByIdAndUpdate(req.user._id, {avatarURL: req.file.path});
 
-    if (!ObjectId.isValid(userId)) return res.status(400).json({message: "missing fields"});
-
-    next()
+      res.status(200).json({
+        avatarURL: updatedUser.avatarURL
+      });
+    } catch(err) {
+      res.sendStatus(400);
+    }
   }
 };
 

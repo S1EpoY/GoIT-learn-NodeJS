@@ -2,17 +2,17 @@ const { Router } = require('express');
 const multer = require('multer');
 const path = require('path');
 const minifyIMG = require('../helpers/imagemin');
+const generateAvatar = require('../helpers/avatarBuilder');
 
 const {
+    userSignUp,
+    userLogin,
     userAuth,
-    getCurrentUser, 
-    updateUserSubscription,
-    updateUserIMG,
-    checkAndDelPrevIMG
+    userLogout
 } = require('./user.controller');
 
 const {
-    validateUserSubData,
+    validateUserKeys,
     validateUserId,
 } = require('../helpers/validator')
 
@@ -31,10 +31,10 @@ upload.single('avatar')
 const router = Router();
 
 /**
- * routs with path '/users'
+ * routs with path '/auth'
  */
-router.patch('/avatars', userAuth, upload.single('avatar'), checkAndDelPrevIMG, minifyIMG, updateUserIMG);
-router.patch('/', validateUserSubData, updateUserSubscription); 
-router.get('/current', userAuth, validateUserId, getCurrentUser);
+router.post('/register', validateUserKeys, upload.single('avatar'), generateAvatar, minifyIMG, userSignUp);
+router.post('/login', validateUserKeys, userLogin);
+router.post('/logout', userAuth, validateUserId, userLogout);
 
 module.exports = router;
