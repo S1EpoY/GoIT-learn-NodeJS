@@ -4,17 +4,23 @@ const contactModel = require('./contact.model');
 class ContactController {
   /**
    * returns an array of all contacts in json format with a status of 200
+   * using mongoose-paginate-v2
    */
   async getAllContacts (req, res)  {
     try {
       const { page, limit, sub } = await req.query;
-      let options;
 
-      if(page || limit || sort) {
-        options = { page, limit, sort: sub };
+      let options = null;
+      let contacts = null;
+      
+      if(page || limit) {
+        if(page) options = { page };
+        if(limit) options = { ...options, limit };
+        
+        contacts = await contactModel.paginate({}, options);
       }
 
-      const contacts = await contactModel.paginate({}, options);
+      if(sub) contacts = await contactModel.paginate({user: {subscription:sub}}, options);
 
       res.status("200").json(contacts);
     } catch {

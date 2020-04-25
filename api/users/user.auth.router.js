@@ -14,12 +14,12 @@ const {
 const {
     validateUserKeys,
     validateUserId,
+    validateUserEmail
 } = require('../helpers/validator')
 
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', '..', 'tmp'),
     filename: function (_, file, cb) {
-        console.log('file', file)
         const ext = path.parse(file.originalname).ext
         cb(null, 'avatar-' + Date.now() + ext)
     }
@@ -33,7 +33,7 @@ const router = Router();
 /**
  * routs with path '/auth'
  */
-router.post('/register', validateUserKeys, upload.single('avatar'), generateAvatar, minifyIMG, userSignUp);
+router.post('/register', validateUserKeys, validateUserEmail, upload.single('avatar'), generateAvatar, minifyIMG, userSignUp);
 router.post('/login', validateUserKeys, userLogin);
 router.post('/logout', userAuth, validateUserId, userLogout);
 

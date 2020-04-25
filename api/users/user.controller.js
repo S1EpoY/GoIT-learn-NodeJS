@@ -1,6 +1,7 @@
 const bcryptjs = require('bcryptjs');
-const fs = require('fs')
+const fs = require('fs');
 const userModel = require('./user.model');
+const contactModel = require('../contacts/contact.model');
 
 class UserController {
   constructor() {
@@ -22,10 +23,7 @@ class UserController {
    */
   async _createUser(req, res) {
     try{
-      const {email, password} = await req.body;
-      
-      const existingEmail = await userModel.findUserByEmail(email);
-      if(existingEmail) return res.status(400).json({message: "Email in use"});
+      const {email, password, name, contactId} = await req.body;
       
       const passwordHash = await bcryptjs.hash(password, this._costFactor);
       const newUser = await userModel.create({
@@ -34,7 +32,11 @@ class UserController {
         avatarURL: req.file.path
       });
 
-      const updatedUser = await userModel.updateToken(newUser._id);
+      const {_id, subscription} = newUser
+
+      if(contactId) await contactModel.findByIdAndUpdate(contactId, {user: {subscription, userId: _id}}, {new: true});
+
+      const updatedUser = await userModel.updateToken(_id, name, contactId);
 
       res.status(201).json({
         token: updatedUser.token, 
@@ -148,14 +150,22 @@ class UserController {
    */
   async updateUserSubscription(req, res) {
     try {
-      const {email} = req.body;
-      const {sub} = req.query;
-
+      const {email, subscription} = req.body;
+      // const {subscription} = req.query;
+      console.log('email', email);
+      console.log('subscription', subscription);
+      
       const user = await userModel.findUserByEmail(email);
+      console.log('user', user);
+      
+      if(!user || !subscription ) return res.sendStatus(401);
+      
+      const existingContact = await contactModel.findOne({email});
+      console.log('existingContact', existingContact)
+      if(existingContact) await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
+      console.log("object")
 
-      if(!user || !sub ) return res.sendStatus(401);
-
-      const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {subscription: sub});
+      const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {subscription});
 
       return res.status(200).json({
           email: updatedUser.email,

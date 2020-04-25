@@ -19,7 +19,6 @@ const {
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', '..', 'tmp'),
     filename: function (_, file, cb) {
-        console.log('file', file)
         const ext = path.parse(file.originalname).ext
         cb(null, 'avatar-' + Date.now() + ext)
     }
@@ -34,7 +33,7 @@ const router = Router();
  * routs with path '/users'
  */
 router.patch('/avatars', userAuth, upload.single('avatar'), checkAndDelPrevIMG, minifyIMG, updateUserIMG);
-router.patch('/', validateUserSubData, updateUserSubscription); 
+router.patch('/', userAuth, validateUserSubData, updateUserSubscription); 
 router.get('/current', userAuth, validateUserId, getCurrentUser);
 
 module.exports = router;

@@ -1,9 +1,7 @@
-const {
-    Types: {
-        ObjectId
-    }
-} = require('mongoose');
+const { Types: {ObjectId} } = require('mongoose');
 const Joi = require('joi');
+const contactModel = require('../contacts/contact.model');
+const userModel = require('../users/user.model');
 
 class JoiValidator {
     /**
@@ -14,7 +12,7 @@ class JoiValidator {
         try {
             const userRules = Joi.object().keys({
                 email: Joi.string().email().required(),
-                password: Joi.string().regex(/^[a-zA-Z0-9]{4,16}$/).alphanum().min(4).max(16).required()
+                password: Joi.string().regex(/^[a-zA-Z0-9]{6,16}$/).alphanum().min(6).max(16).required()
             });
 
             await Joi.validate(req.body, userRules);
@@ -36,12 +34,10 @@ class JoiValidator {
         try {
             const bodyRules = Joi.object({
                 email: Joi.string().email().required(),
+                subscription: Joi.string().required(),
             });
 
-            const queryRules = Joi.string().required();
-
             await Joi.validate(req.body, bodyRules);
-            await Joi.validate(req.query.sub, queryRules);
 
             next();
         } catch {
@@ -49,6 +45,37 @@ class JoiValidator {
                 message: "Missing required fields"
             });
         }
+    }
+
+
+    /**
+     * validation user email
+     * if user email is invalid return json with key `{"message": "Email in use"}` and send status 400
+     */
+    async validateUserEmail(req, res, next) {
+        try {
+            const {email} = await req.body;
+      
+            const existingUserEmail = await userModel.findUserByEmail(email);
+            if(existingUserEmail) return res.status(400).json({message: "Email in use"});
+
+            const existingContact = await contactModel.findOne({email});
+
+            if(existingContact) {
+                
+                req.body = {
+                    ...req.body,
+                    name: existingContact.name,
+                    contactId: existingContact._id
+                }
+            }  
+
+
+            next()
+        } catch (err) {
+            next(err);
+        }
+
     }
 
 

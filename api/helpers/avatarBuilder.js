@@ -9,13 +9,13 @@ const femaleAvatar = Avatar.female8bitBuilder(128);
 
 module.exports = async function generateAvatar(req, _, next) {
     try {
-        const {email} = req.body;
+        const {email, name} = req.body;
         const avatarName = 'avatar-' + Date.now() + '.png';
-        const uniqueName = email.split('@')[0];
+        const uniqueName = name ? name.split(' ')[0] : email.split('@')[0];
         const destination = path.join(__dirname, '..', '..', 'tmp');
         const tmpPath = path.join(destination, avatarName);
   
-        const validateGenderURL = `https://api.genderize.io/?name=${uniqueName}`
+        const validateGenderURL = `https://api.genderize.io/?name=${uniqueName}`;
   
         const gender = await fetch(validateGenderURL).then(res => res.json()).then(data => data.gender);
     
