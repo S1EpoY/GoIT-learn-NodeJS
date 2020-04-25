@@ -85,7 +85,7 @@ REST API поддерживает следующие рауты:
 - Получает `body` в формате `{email, password}`
 - Если в `body` нет каких-то обязательных полей, возарщает json-файл с ключом `{"message": "Missing required fields"}` и статусом `422`
 - Если с `body` все хорошо, осуществляеться валидация пароля найденного юзера
-- Если пароли совпадают создаеться токен, сохраняеться в текущем юзере и возвращает json-файл с ключом `{"token": "exampletoken", "user": {"email": "example@example.com", "subscription": "free"}}`и статусом `200`
+- Если пароли совпадают создаеться токен, сохраняеться в текущем юзере и возвращает json-файл с ключом `{"token": "exampleToken", "user": {"email": "example@example.com", "subscription": "free"}}`и статусом `200`
 - Если пароль не верный возвращает json-файл с ключом `{"message": "Wrong login or password"}` и статусом `400`
 
 ### @ POST /auth/logout
@@ -95,7 +95,7 @@ REST API поддерживает следующие рауты:
 - Находит пользователя по `id`.
 - В случае успешного прохождения валидации удаляет токен в текущем юзере и возвращает json-файл с ключом `{"message": "Logout success"}` и статусом `200`
 
-### @ POST /users/current
+### @ GET /users/current
 
 - Получает токен из заголовков `Authorization`, проверяет токен на валидность.
 - В случае не валидного токена возвращает json-файл с ключом `{"message": "Not authorized"}` и статусом `401`
@@ -108,7 +108,7 @@ REST API поддерживает следующие рауты:
 - В случае не валидного `subscription` или отсутствия `email` в `body` возвращает json-файл 
 с ключом `{"message": "Not authorized"}` и статусом `401`
 - Находит пользователя по `id`.
-- В случае успешного прохождения валидации возвращает json-файл с ключом `{"email": "example@example.com", "subscription": "updateSubscription"}` и статусом `200`
+- В случае успешного прохождения валидации возвращает json-файл с ключом `{"email": "example@example.com", "subscription": "exampleUpdatedSubscription"}` и статусом `200`
 
 ### @ GET /public/images/avatar-***.ext
 
