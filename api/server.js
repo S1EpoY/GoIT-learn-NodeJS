@@ -4,6 +4,14 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const apiContactsRoutes = require('./contacts/contact.router');
+const userRoutes = require('./users/user.router');
+
+const {
+    userAuth, 
+    getCurrentUser, 
+    validateUserSubData, 
+    updateDataUsers
+} = require('./users/user.controller')
 
 dotenv.config();
 
@@ -16,14 +24,19 @@ app.use(logger('combined'));
 app.use(cors());
 
 app.use('/api/contacts', apiContactsRoutes);
+app.use('/auth', userRoutes);
 
-const PORT = process.env.PORT || 3000;
+app.patch('/users', validateUserSubData, updateDataUsers); 
+app.get('/users/current', userAuth, getCurrentUser);    
+
+const PORT = process.env.PORT || 8080;
 
 async function startServer() {
     try {
         await mongoose.connect(process.env.MONGODB_URL, { 
             useUnifiedTopology: true, 
-            useNewUrlParser: true, 
+            useNewUrlParser: true,
+            useCreateIndex: true, 
             useFindAndModify: false 
         });
         
@@ -34,7 +47,8 @@ async function startServer() {
             console.log(`Server is runing on port ${PORT}`)
         });
     } catch (err) {
-        console.log(err)
+        console.log(err);
+        process.exit(1);
     }
     
 }
