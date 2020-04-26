@@ -1,4 +1,5 @@
 const bcryptjs = require('bcryptjs');
+const path = require('path');
 const fs = require('fs');
 const userModel = require('./user.model');
 const contactModel = require('../contacts/contact.model');
@@ -16,6 +17,7 @@ class UserController {
     return this._createUser.bind(this);
   }
   
+
   /**
    * function create new user
    * if email exist return json with key `{"message": "Email in use"}` and status 400
@@ -29,7 +31,7 @@ class UserController {
       const newUser = await userModel.create({
         email, 
         password: passwordHash, 
-        avatarURL: req.file.path
+        avatarURL: `${process.env.BASE_URL}images/${req.file.filename}`
       });
 
       const {_id, subscription} = newUser
@@ -151,19 +153,13 @@ class UserController {
   async updateUserSubscription(req, res) {
     try {
       const {email, subscription} = req.body;
-      // const {subscription} = req.query;
-      console.log('email', email);
-      console.log('subscription', subscription);
       
       const user = await userModel.findUserByEmail(email);
-      console.log('user', user);
       
       if(!user || !subscription ) return res.sendStatus(401);
       
       const existingContact = await contactModel.findOne({email});
-      console.log('existingContact', existingContact)
       if(existingContact) await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
-      console.log("object")
 
       const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {subscription});
 
@@ -184,7 +180,11 @@ class UserController {
   checkAndDelPrevIMG(req, _, next) {
     try {
       const {avatarURL} = req.user;
-      if(avatarURL) fs.promises.unlink(avatarURL);
+
+      const avatarName = avatarURL.split('/images/')[1];
+      const avatarPath = path.join(__dirname, '..', 'public', 'images', avatarName);
+
+      if(avatarURL) fs.promises.unlink(avatarPath);
 
       next();
     } catch(err) {
@@ -199,7 +199,8 @@ class UserController {
    */
   async updateUserIMG(req, res) {
     try {
-      const updatedUser = await userModel.findUserByIdAndUpdate(req.user._id, {avatarURL: req.file.path});
+      const avatarURL = `${process.env.BASE_URL}images/${req.file.filename}`
+      const updatedUser = await userModel.findUserByIdAndUpdate(req.user._id, {avatarURL});
 
       res.status(200).json({
         avatarURL: updatedUser.avatarURL

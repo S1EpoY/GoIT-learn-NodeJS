@@ -11,7 +11,7 @@ module.exports = async function minifyIMG(req, _, next) {
         const MINIFIED_DIR = path.join(__dirname, '..', 'public', 'images');
         const MINIFIED_FILE_DIR = path.join(MINIFIED_DIR, filename);
         
-        const minifyFile = await imagemin(['tmp'], {
+        await imagemin(['tmp'], {
             destination: 'api/public/images',
             plugins: [
                 imageminJpegtran(),
