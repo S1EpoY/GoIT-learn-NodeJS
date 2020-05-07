@@ -6,7 +6,15 @@ const contactSchema = new Schema({
     idx: {type: Number},
     name: {type: String, required: true},
     email: {type: String, required: true},
-    phone: {type: String, required: true}
+    phone: {type: String, required: true},
+    user: {
+      subscription: {
+        type: String,
+        enum: ["free", "pro", "premium"],
+        default: "free"
+      },
+      userId: { type: Schema.Types.ObjectId, ref: 'User' }
+    }
 });
 
 contactSchema.plugin(mongoosePaginate);

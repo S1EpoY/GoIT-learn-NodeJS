@@ -1,28 +1,32 @@
-const Joi = require("joi");
 const contactModel = require('./contact.model');
-const { Types: { ObjectId } } = require('mongoose');
 
 
 class ContactController {
   /**
    * returns an array of all contacts in json format with a status of 200
+   * using mongoose-paginate-v2
    */
   async getAllContacts (req, res)  {
     try {
       const { page, limit, sub } = await req.query;
-      let options;
 
-      if(page || limit || sort) {
-        options = { page, limit, sort: sub };
+      let options = null;
+      let contacts = null;
+      
+      if(page || limit) {
+        if(page) options = { page };
+        if(limit) options = { ...options, limit };
+        
+        contacts = await contactModel.paginate({}, options);
       }
 
-      const contacts = await contactModel.paginate({}, options);
+      if(sub) contacts = await contactModel.paginate({user: {subscription:sub}}, options);
 
       res.status("200").json(contacts);
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -41,7 +45,7 @@ class ContactController {
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -57,7 +61,7 @@ class ContactController {
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -76,7 +80,7 @@ class ContactController {
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -96,8 +100,8 @@ class ContactController {
       return res.status(200).json({ "message": "contact deleted" });
     } catch {
       res.sendStatus(400);
-    };
-  };
+    }
+  }
 
 
     /**
@@ -116,7 +120,7 @@ class ContactController {
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -135,7 +139,7 @@ class ContactController {
     } catch {
       res.sendStatus(400);
     }
-  };
+  }
 
 
   /**
@@ -155,62 +159,8 @@ class ContactController {
       return res.status(200).json({ "message": "contact deleted" });
     } catch {
       res.sendStatus(400);
-    };
-  };  
-
-
-  /**
-   * validation parameters ID of contact 
-   * if contact id is invalid return json with key {message: "missing fields"} and send status 400
-   */
-  async validateId(req, res, next) {
-    const {contactId} = req.params;
-
-    if (!ObjectId.isValid(contactId)) return res.status(400).json({message: "missing fields"});
-
-    next()
-  }
-
-
-  /**
-  * validation parameters new contact 
-  * if the body does not have any required fields, returns json with the key `{"message":"missing required name field"}` and status 400
-  */
-  async validateNewContact(req, res, next) {
-    try {
-      const contactRules = Joi.object({
-        name: Joi.string().required(),
-        email: Joi.string().required(),
-        phone: Joi.string().required() //(000) 000-0000
-      });
-
-      await Joi.validate(req.body, contactRules);
-
-      next();
-    } catch {
-      res.status(400).json({"message":"missing required name field"});
     }
-  };
-
-  /**
-   * validation contact parameters during update
-   * if the body does not have any required fields, returns json with the key `{"message":"missing required name field"}` and status 400
-   */
-  async validateUpdatedContact(req, res, next) {
-    try {
-      const contactRules = Joi.object({
-        name: Joi.string(),
-        email: Joi.string(),
-        phone: Joi.string() //(000) 000-0000
-      });
-
-      await Joi.validate(req.body, contactRules);
-
-      next();
-    } catch {
-      res.sendStatus(400);
-    }
-  }
+  }  
 }
 
 module.exports = new ContactController();
