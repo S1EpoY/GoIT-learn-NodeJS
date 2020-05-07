@@ -6,15 +6,15 @@ const minifyIMG = require('../helpers/imagemin');
 const {
     userAuth,
     getCurrentUser, 
-    updateUserSubscription,
-    updateUserIMG,
+    updateSubscription,
+    updateIMG,
     checkAndDelPrevIMG
 } = require('./user.controller');
 
 const {
-    validateUserSubData,
-    validateUserId,
-} = require('../helpers/validator')
+    validateSubData,
+    validateId,
+} = require('./user.validator')
 
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', '..', 'tmp'),
@@ -32,8 +32,8 @@ const router = Router();
 /**
  * routs with path '/users'
  */
-router.patch('/avatars', userAuth, upload.single('avatar'), checkAndDelPrevIMG, minifyIMG, updateUserIMG);
-router.patch('/', userAuth, validateUserSubData, updateUserSubscription); 
-router.get('/current', userAuth, validateUserId, getCurrentUser);
+router.patch('/avatars', userAuth, upload.single('avatar'), checkAndDelPrevIMG, minifyIMG, updateIMG);
+router.patch('/', userAuth, validateSubData, updateSubscription); 
+router.get('/current', userAuth, validateId, getCurrentUser);
 
 module.exports = router;

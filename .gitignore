@@ -356,5 +356,12 @@ MigrationBackup/
 .env
 
 # Being developed
-api/contacts/contact.testing.js
 *api/public/images/
+
+api/helpers/validator.js
+
+api/contacts/contact.testing.js
+api/contacts/contact.test.js
+api/users/user.test.js
+
+*services

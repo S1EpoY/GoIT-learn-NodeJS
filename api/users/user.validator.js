@@ -1,14 +1,18 @@
 const { Types: {ObjectId} } = require('mongoose');
 const Joi = require('joi');
+const dotenv = require('dotenv');
 const contactModel = require('../contacts/contact.model');
 const userModel = require('../users/user.model');
+const isRedirectURLExists = require('../helpers/validatorURL');
 
-class JoiValidator {
+dotenv.config();
+
+class UserValidator {
     /**
      * validation signIn parameters user 
      * if the body does not have any required fields, returns json with the key `{"message":"Missing required fields"}` and send status 422
      */
-    async validateUserKeys(req, res, next) {
+    async validateKeys(req, res, next) {
         try {
             const userRules = Joi.object().keys({
                 email: Joi.string().email().required(),
@@ -30,7 +34,7 @@ class JoiValidator {
      * validation updated subscription parameters user 
      * if the body does not have any required fields, returns json with the key `{"message":"Missing required fields"}` and send status 422
      */
-    async validateUserSubData(req, res, next) {
+    async validateSubData(req, res, next) {
         try {
             const bodyRules = Joi.object({
                 email: Joi.string().email().required(),
@@ -49,27 +53,61 @@ class JoiValidator {
 
 
     /**
-     * validation user email
+     * check email for uniqueness
      * if user email is invalid return json with key `{"message": "Email in use"}` and send status 400
      */
-    async validateUserEmail(req, res, next) {
+    async checkEmailForUniqueness(req, res, next) {
         try {
             const {email} = await req.body;
       
             const existingUserEmail = await userModel.findUserByEmail(email);
             if(existingUserEmail) return res.status(400).json({message: "Email in use"});
 
+            next()
+        } catch (err) {
+            next(err);
+        }
+
+    }
+
+
+    /**
+     * validation user email
+     * if user email is invalid return json with key `{"message": "Missing required fields"}` and send status 422
+     */
+    async validateEmail(req, res, next) {
+        try {
+            const bodyRules = Joi.object({
+                email: Joi.string().email().required()
+            });
+
+            await Joi.validate(req.body, bodyRules);
+
+            next();
+        } catch {
+            res.status(422).json({
+                message: "Missing required fields"
+            });
+        }
+    }
+
+
+    /**
+     * check user email match for contact email
+     * if user email match pass to `req.body` json with key `{"name": "contact.name", "contactId": "contact._id"}` and return next()
+     */
+    async checkEmailForMatch(req, _, next) {
+        try {
+            const {email} = await req.body;
             const existingContact = await contactModel.findOne({email});
 
             if(existingContact) {
-                
                 req.body = {
                     ...req.body,
                     name: existingContact.name,
                     contactId: existingContact._id
                 }
             }  
-
 
             next()
         } catch (err) {
@@ -83,7 +121,7 @@ class JoiValidator {
      * validation object-ID of user
      * if user id is invalid return json with key `{"message": "missing fields"}` and send status 400
      */
-    async validateUserId(req, res, next) {
+    async validateId(req, res, next) {
         try {
             const userId = req.user._id;
 
@@ -97,70 +135,25 @@ class JoiValidator {
         }
 
     }
-
-
-    /**
-     * validation parameters new contact 
-     * if the body does not have any required fields, returns json with the key `{"message":"missing required name field"}` and status 400
-     */
-    async validateNewContact(req, res, next) {
-        try {
-            const contactRules = Joi.object({
-                name: Joi.string().required(),
-                email: Joi.string().required(),
-                phone: Joi.string().required() //(000) 000-0000
-            });
-
-            await Joi.validate(req.body, contactRules);
-
-            next();
-        } catch {
-            res.status(400).json({
-                "message": "missing required name field"
-            });
-        }
-    }
-
+    
 
     /**
-     * validation contact parameters during update
-     * if the body does not have any required fields, returns json with the key `{"message":"missing required name field"}` and status 400
+     * check URL for redirect link using OTPCode 
+     * if URL is valid, redirected to that URL
+     * if URL is invalid returned next() 
      */
-    async validateUpdatedContact(req, res, next) {
-        try {
-            const contactRules = Joi.object({
-                name: Joi.string(),
-                email: Joi.string(),
-                phone: Joi.string() //(000) 000-0000
-            });
+    async validateAndRedirectURL(_, res, next) {
+        try{
+            const URL = process.env.REDIRECT_URL;
+            const existsURL = await isRedirectURLExists(URL);
 
-            await Joi.validate(req.body, contactRules);
-
-            next();
-        } catch {
-            res.sendStatus(400);
-        }
-    }
-
-
-    /**
-     * validation parameters ID of contact 
-     * if contact id is invalid return json with key {message: "missing fields"} and send status 400
-     */
-    async validateContactIdParams(req, res, next) {
-        try {
-            const {contactId} = req.params;
-
-            if (!ObjectId.isValid(contactId)) return res.status(400).json({
-                message: "missing fields"
-            });
+            if(existsURL) return res.redirect(URL);
 
             next();
         } catch(err) {
             next(err);
         }
-
     }
 }
 
-module.exports = new JoiValidator();
+module.exports = new UserValidator();

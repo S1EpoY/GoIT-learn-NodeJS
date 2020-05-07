@@ -2,20 +2,25 @@ const { Router } = require('express');
 const multer = require('multer');
 const path = require('path');
 const minifyIMG = require('../helpers/imagemin');
-const generateAvatar = require('../helpers/avatarBuilder');
+const {createAvatar} = require('../helpers/avatarBuilder');
 
 const {
     userSignUp,
     userLogin,
     userAuth,
-    userLogout
+    userLogout,
+    confirmedEmail,
+    confirmedEmailUsingLink
 } = require('./user.controller');
 
 const {
-    validateUserKeys,
-    validateUserId,
-    validateUserEmail
-} = require('../helpers/validator')
+    validateKeys,
+    validateId,
+    validateEmail,
+    checkEmailForMatch,
+    checkEmailForUniqueness,
+    validateAndRedirectURL
+} = require('./user.validator')
 
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', '..', 'tmp'),
@@ -33,8 +38,21 @@ const router = Router();
 /**
  * routs with path '/auth'
  */
-router.post('/register', validateUserKeys, validateUserEmail, upload.single('avatar'), generateAvatar, minifyIMG, userSignUp);
-router.post('/login', validateUserKeys, userLogin);
-router.post('/logout', userAuth, validateUserId, userLogout);
+router.post(
+    '/register', 
+    validateKeys, 
+    checkEmailForUniqueness, 
+    checkEmailForMatch, 
+    upload.single('avatar'), 
+    createAvatar, 
+    minifyIMG, 
+    userSignUp
+    );
+
+router.post('/login', validateKeys, userLogin);
+router.post('/logout', userAuth, validateId, userLogout);
+
+router.get('/otp/:otpCode', validateAndRedirectURL, confirmedEmailUsingLink);
+router.post('/otp/:otpCode', validateEmail, confirmedEmail);
 
 module.exports = router;

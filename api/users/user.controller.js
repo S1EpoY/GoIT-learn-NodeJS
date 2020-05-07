@@ -2,7 +2,7 @@ const bcryptjs = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const userModel = require('./user.model');
-const contactModel = require('../contacts/contact.model');
+const emailSendler = require('../helpers/emailSendler');
 
 class UserController {
   constructor() {
@@ -20,23 +20,28 @@ class UserController {
 
   /**
    * function create new user
-   * if email exist return json with key `{"message": "Email in use"}` and status 400
+   * if email exist return json with key `{"message": "Email in use"}` and send status 400
    * otherwise return json with key `{"token": "exampletoken", "user": {"email": "example@email.com", "subscription": "free"}}` and send status 201
    */
   async _createUser(req, res) {
     try{
       const {email, password, name, contactId} = await req.body;
+
+      const otpCode = await userModel.createOTPCode();
       
       const passwordHash = await bcryptjs.hash(password, this._costFactor);
       const newUser = await userModel.create({
         email, 
         password: passwordHash, 
-        avatarURL: `${process.env.BASE_URL}images/${req.file.filename}`
+        avatarURL: `${process.env.BASE_URL}images/${req.file.filename}`,
+        otpCode
       });
+
+      emailSendler(newUser);
 
       const {_id, subscription} = newUser
 
-      if(contactId) await contactModel.findByIdAndUpdate(contactId, {user: {subscription, userId: _id}}, {new: true});
+      if(contactId) await userModel.findContactByIdAndUpdate(contactId, {user: {subscription, userId: _id}});
 
       const updatedUser = await userModel.updateToken(_id, name, contactId);
 
@@ -54,6 +59,85 @@ class UserController {
 
 
   /**
+   * function checks otpCode and confirmed user email
+   * checks for url-redirect path existence
+   * if frontend page exists redirects to the page
+   * otherwise return json with key `{"message": "Your email was successfully verified", "user": {"email": example@email, "subscription": free, "avatarURL": example.URL, "registered": true}}` and send status 200
+   */
+  async confirmedEmailUsingLink(req, res) {
+    try {
+      const { otpCode } = req.params;
+      const userToVerify = await userModel.findOne({ otpCode });
+
+      if (!userToVerify) return res.status(401).json({ message: 'Verification link expired'});
+
+      const verifiedUser = await userModel.verifyUser(userToVerify._id);
+      
+      res.status(200).json({
+        message: 'Your email was successfully verified',
+        user: {
+          email: verifiedUser.email,
+          subscription: verifiedUser.subscription,
+          avatarURL: verifiedUser.avatarURL,
+          registered: verifiedUser.registered
+        }
+      })
+    } catch {
+      res.sendStatus(400);
+    }
+  }
+
+
+  /**
+   * function checks `otpCode` and registers email
+   * checks for url-redirect path existence
+   * if `email` doesn`t exists return json with key `{"message": "User not found"}` and send status 401
+   * if `otpCode` doesn`t exists create new `otpCode` return json with key `{"message": "Verification link expired", "user": "email: "example@email", "otpCode": "newOTPCode"}` and send status 401
+   * otherwise return json with key `{"message": "Your email was successfully verified", "user": {"email": example@email, "subscription": free, "avatarURL": example.URL, "registered": true}}` and send status 200
+   */
+  async confirmedEmail(req, res) {
+    try {
+      const { otpCode } = req.params;
+      const { email } = req.body;
+
+      const userToVerify = await userModel.findOne({ email });
+      if(!userToVerify) return res.status(401).json({message: 'User not found'});
+
+      if (userToVerify.otpCode !== otpCode) {
+        const newOTPCode = await userModel.createOTPCode();
+
+        const updatedUser = await userModel.findUserByIdAndUpdate(userToVerify._id, {otpCode: newOTPCode});
+
+        return res.status(401).json({ 
+          message: 'Verification link expired',
+          user: {
+            email: updatedUser.email,
+            otpCode: updatedUser.otpCode
+          }
+        });
+      }
+
+      const verifiedUser = await userModel.verifyUser(userToVerify._id);
+      
+      res.status(200).json({
+        message: 'Your email was successfully verified',
+        user: {
+          email: verifiedUser.email,
+          subscription: verifiedUser.subscription,
+          avatarURL: verifiedUser.avatarURL,
+          registered: verifiedUser.registered
+        }
+      })
+    } catch {
+      res.sendStatus(400);
+    }
+  }
+
+
+
+
+
+  /**
    * function find user by email
    * if user is not exist return 'Bad request'
    * if password is not valid return json with key `{"message": "Wrong login or password"}` and send status 400
@@ -64,14 +148,14 @@ class UserController {
       const {email, password} = req.body;
 
       const user = await userModel.findUserByEmail(email);
-      if(!user) return res.sendStatus(401);
+      if(!user || user.registered !== true) return res.sendStatus(401);
       
       const isPasswordValid = await bcryptjs.compare(password, user.password);
       if(!isPasswordValid) return res.status(400).json({message: "Wrong login or password"});
 
       const updatedUser = await userModel.updateToken(user._id);
       
-      return res.status(200).json({
+      res.status(200).json({
         token: updatedUser.token, 
         user: {
           email: updatedUser.email,
@@ -89,8 +173,8 @@ class UserController {
    * function is middleware for validate token
    * take token from headers `Athorization` and validates
    * if token is valide take user id from token, find user in database by this id
-   * if user exists, write its user data to req.user and call next() 
-   * if user id doesn`t exist return json with key {"message": "Not authorized"} and send status 401
+   * if user exists, write its user data to req.user and call `next()` 
+   * if user id doesn`t exist return json with key `{"message": "Not authorized"}` and send status 401
    */
   async userAuth(req, res, next) {
     try {
@@ -98,10 +182,10 @@ class UserController {
       const token = authHeader.replace("Bearer ", "");
       
       const userId = await userModel.verifyToken(token);
-      if(!userId) return res.status(401).json({message: "Not authorized"}); 
+      if(!userId) res.status(401).json({message: "Not authorized"}); 
       
       const user = await userModel.findById(userId);
-      if(!user || user.token !== token) return res.status(401).json({message: "Not authorized"});
+      if(!user || user.token !== token) res.status(401).json({message: "Not authorized"});
       
       req.user = user;
 
@@ -123,7 +207,7 @@ class UserController {
       const user = req.user;
       await userModel.deleteToken(user._id);
 
-      return res.status(200).json({message: "Logout success"});
+      res.status(200).json({message: "Logout success"});
     } catch(err) {
       res.status(401).json({message: "Not authorized"});
     }
@@ -150,20 +234,19 @@ class UserController {
    * update field "subscription" in current user and return json with key `{"email": "updatedUserEmail", "subscription": "updatedUserSubscription"}` and send status 200
    * if user doesn`t exist return json with key `{"message": "Not authorized"}` and send status 401
    */
-  async updateUserSubscription(req, res) {
+  async updateSubscription(req, res) {
     try {
       const {email, subscription} = req.body;
       
       const user = await userModel.findUserByEmail(email);
       
       if(!user || !subscription ) return res.sendStatus(401);
-      
-      const existingContact = await contactModel.findOne({email});
-      if(existingContact) await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
 
+      await userModel.findContactByEmailAndUpdate(email);
+      
       const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {subscription});
 
-      return res.status(200).json({
+      res.status(200).json({
           email: updatedUser.email,
           subscription: updatedUser.subscription
       });
@@ -195,9 +278,9 @@ class UserController {
 
   /**
    * function update path to user avatar
-   * update field 'avatarURL' in current user and return json with key {'avatarURL': 'exemple.URL'} and sen status 200
+   * update field 'avatarURL' in current user and return json with key `{"avatarURL": "exemple.URL"}` and sen status 200
    */
-  async updateUserIMG(req, res) {
+  async updateIMG(req, res) {
     try {
       const avatarURL = `${process.env.BASE_URL}images/${req.file.filename}`
       const updatedUser = await userModel.findUserByIdAndUpdate(req.user._id, {avatarURL});

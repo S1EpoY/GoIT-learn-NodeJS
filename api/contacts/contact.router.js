@@ -15,7 +15,7 @@ const {
   validateContactIdParams,
   validateNewContact,
   validateUpdatedContact
-} = require('../helpers/validator')
+} = require('./contact.validator')
 
 const contactRouter = Router();
 

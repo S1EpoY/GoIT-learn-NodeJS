@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const shortId = require('shortid');
+const contactModel = require('../contacts/contact.model');
 
 const {Schema, model} = mongoose;
 
@@ -13,6 +15,8 @@ const userSchema = new Schema({
     enum: ["free", "pro", "premium"],
     default: "free"
   },
+  otpCode: String,
+  registered: { type: Boolean, default: false },
   token: String,
   contact: {
     name: {type: String, default: null},
@@ -22,9 +26,13 @@ const userSchema = new Schema({
 
 userSchema.statics.findUserByIdAndUpdate = findUserByIdAndUpdate;
 userSchema.statics.findUserByEmail = findUserByEmail;
+userSchema.statics.verifyUser = verifyUser;
 userSchema.statics.verifyToken = verifyToken;
 userSchema.statics.updateToken = updateToken;
 userSchema.statics.deleteToken = deleteToken;
+userSchema.statics.createOTPCode = createOTPCode;
+userSchema.statics.findContactByIdAndUpdate = findContactByIdAndUpdate;
+userSchema.statics.findContactByEmailAndUpdate = findContactByEmailAndUpdate;
 
 dotenv.config();
 
@@ -34,6 +42,13 @@ async function findUserByIdAndUpdate(id, updateParams) {
 
 async function findUserByEmail(email) {
   return await this.findOne({email});
+}
+
+async function verifyUser(id) {
+  return await this.findUserByIdAndUpdate(id, {
+    registered: true,
+    otpCode: null
+  });
 }
 
 async function verifyToken(token) {
@@ -57,7 +72,26 @@ async function updateToken(id, name, contactId) {
 }
 
 async function deleteToken(id) {
-  return await this.findByIdAndUpdate(id, {token: null}, {new: true});
+  return await this.findUserByIdAndUpdate(id, {token: null});
+}
+
+async function createOTPCode() {
+  const otpCode = shortId();
+  return otpCode;
+}
+
+async function findContactByIdAndUpdate(contactId, updateParams) {
+  return await contactModel.findByIdAndUpdate(contactId, {$set: updateParams}, {new: true})
+}
+
+async function findContactByEmailAndUpdate(email) {
+  const existingContact = await contactModel.findOne({email});
+
+  if(!existingContact) return false;
+
+  await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
+  
+  return true
 }
 
 // create users collection
