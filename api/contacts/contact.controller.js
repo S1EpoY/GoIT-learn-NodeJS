@@ -9,19 +9,8 @@ class ContactController {
   async getAllContacts (req, res)  {
     try {
       const { page, limit, sub } = await req.query;
-
-      let options = null;
-      let contacts = null;
       
-      if(page || limit) {
-        if(page) options = { page };
-        if(limit) options = { ...options, limit };
-        
-        contacts = await contactModel.paginate({}, options);
-      }
-
-      if(sub) contacts = await contactModel.paginate({user: {subscription:sub}}, options);
-      else contacts = await contactModel.paginate({}, options);
+      const contacts = await contactModel.getPaginateUsingParams(page, limit, sub);
 
       res.status("200").json(contacts);
     } catch {
@@ -42,7 +31,7 @@ class ContactController {
 
       if (!contact) return res.status(404).json({message: "Not found"});
 
-      return res.status("200").json(contact);
+      res.status("200").json(contact);
     } catch {
       res.sendStatus(400);
     }
@@ -77,7 +66,7 @@ class ContactController {
       
       if (!contactToUpdate) return res.status(404).json({ message: "Not found" });
 
-      return res.status(200).json(contactToUpdate);
+      res.status(200).json(contactToUpdate);
     } catch {
       res.sendStatus(400);
     }
@@ -98,7 +87,7 @@ class ContactController {
 
       contactModel.updateIdxContacts();
 
-      return res.status(200).json({ "message": "contact deleted" });
+      res.status(200).json({ "message": "contact deleted" });
     } catch {
       res.sendStatus(400);
     }
@@ -117,7 +106,7 @@ class ContactController {
 
       if (!contact) return res.status(404).json({message: "Not found"});
 
-      return res.status("200").json(contact);
+      res.status("200").json(contact);
     } catch {
       res.sendStatus(400);
     }
@@ -136,7 +125,7 @@ class ContactController {
       
       if (!contactToUpdate) return res.status(404).json({ message: "Not found" });
 
-      return res.status(200).json(contactToUpdate);
+      res.status(200).json(contactToUpdate);
     } catch {
       res.sendStatus(400);
     }
@@ -157,7 +146,7 @@ class ContactController {
 
       contactModel.updateIdxContacts();
 
-      return res.status(200).json({ "message": "contact deleted" });
+      res.status(200).json({ "message": "contact deleted" });
     } catch {
       res.sendStatus(400);
     }
