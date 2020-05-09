@@ -21,7 +21,7 @@ app.use('/api/contacts', apiContactsRoutes);
 app.use('/auth', userAuthRoutes);
 app.use('/users', userRoutes);    
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT;
 
 async function startServer() {
     try {
