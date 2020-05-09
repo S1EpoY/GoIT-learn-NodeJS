@@ -98,15 +98,12 @@ class UserController {
   async confirmedEmail(req, res) {
     try {
       const { otpCode } = req.params;
-      const { email } = req.body;
+      const { user } = req.body;
 
-      const userToVerify = await userModel.findOne({ email });
-      if(!userToVerify) return res.status(401).json({message: 'User not found'});
-
-      if (userToVerify.otpCode !== otpCode) {
+      if (user.otpCode !== otpCode) {
         const newOTPCode = await userModel.createOTPCode();
 
-        const updatedUser = await userModel.findUserByIdAndUpdate(userToVerify._id, {otpCode: newOTPCode});
+        const updatedUser = await userModel.findUserByIdAndUpdate(user._id, {otpCode: newOTPCode});
 
         return res.status(401).json({ 
           message: 'Verification link expired',
@@ -117,7 +114,7 @@ class UserController {
         });
       }
 
-      const verifiedUser = await userModel.verifyUser(userToVerify._id);
+      const verifiedUser = await userModel.verifyUser(user._id);
       
       res.status(200).json({
         message: 'Your email was successfully verified',
@@ -145,12 +142,10 @@ class UserController {
    */
   async userLogin(req, res) {
     try{
-      const {email, password} = req.body;
-
-      const user = await userModel.findUserByEmail(email);
-      if(!user || user.registered !== true) return res.sendStatus(401);
+      const {user, password} = req.body;
       
       const isPasswordValid = await bcryptjs.compare(password, user.password);
+
       if(!isPasswordValid) return res.status(400).json({message: "Wrong login or password"});
 
       const updatedUser = await userModel.updateToken(user._id);
@@ -182,15 +177,14 @@ class UserController {
       const token = authHeader.replace("Bearer ", "");
       
       const userId = await userModel.verifyToken(token);
-      if(!userId) res.status(401).json({message: "Not authorized"}); 
-      
       const user = await userModel.findById(userId);
-      if(!user || user.token !== token) res.status(401).json({message: "Not authorized"});
+
+      if(!user || user.token !== token) return res.status(401).json({message: "Not authorized"});
       
       req.user = user;
 
       next();
-    } catch (err) {
+    } catch (err){
       next(err);
     }
   }

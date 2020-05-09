@@ -53,25 +53,6 @@ class UserValidator {
 
 
     /**
-     * check email for uniqueness
-     * if user email is invalid return json with key `{"message": "Email in use"}` and send status 400
-     */
-    async checkEmailForUniqueness(req, res, next) {
-        try {
-            const {email} = await req.body;
-      
-            const existingUserEmail = await userModel.findUserByEmail(email);
-            if(existingUserEmail) return res.status(400).json({message: "Email in use"});
-
-            next()
-        } catch (err) {
-            next(err);
-        }
-
-    }
-
-
-    /**
      * validation user email
      * if user email is invalid return json with key `{"message": "Missing required fields"}` and send status 422
      */
@@ -93,10 +74,91 @@ class UserValidator {
 
 
     /**
+     * validation object-ID of user
+     * if user id is invalid return json with key `{"message": "missing fields"}` and send status 400
+     */
+    async validateId(req, res, next) {
+        try {
+            const userId = req.user._id;
+
+            if (!ObjectId.isValid(userId)) return res.status(400).json({
+                message: "missing fields"
+            });
+
+            next()
+        } catch (err) {
+            next(err);
+        }
+
+    }
+
+
+    /**
+     * validation user registration
+     * if user registered field doesn`t true send status 401
+     */
+    async validateRegistretion(req, res, next) {
+        try {
+            const { user } = req.body;
+
+            if(user.registered !== true) return res.sendStatus(401);
+
+            next()
+        } catch (err) {
+            next(err);
+        }
+
+    }
+
+
+    /**
+     * check email for uniqueness
+     * if user email is invalid return json with key `{"message": "Email in use"}` and send status 400
+     */
+    async checkEmailForUniqueness(req, res, next) {
+        try {
+            const {email} = await req.body;
+      
+            const existingUser = await userModel.findUserByEmail(email);
+            if(existingUser) return res.status(400).json({message: "Email in use"});
+
+            next()
+        } catch (err) {
+            next(err);
+        }
+
+    }
+
+
+    /**
+     * check user email matches email in user database
+     * if user email doesn't exist return json with key `{"message": "Wrong login or password"}` and send status 401
+     */
+    async checkEmailForMatchesInUserDB(req, res, next) {
+        try {
+            const {email} = await req.body;
+
+            const existingUser = await userModel.findOne({email});
+
+            if(!existingUser) return res.status(401).json({message: 'Wrong login or password'});
+
+            req.body = {
+                ...req.body,
+                user: existingUser
+            }
+
+            next()
+        } catch (err) {
+            next(err);
+        }
+    }
+
+
+    /**
      * check user email match for contact email
      * if user email match pass to `req.body` json with key `{"name": "contact.name", "contactId": "contact._id"}` and return next()
      */
-    async checkEmailForMatch(req, _, next) {
+    async checkEmailForMatchesInContactDB(req, _, next) {
         try {
             const {email} = await req.body;
             const existingContact = await contactModel.findOne({email});
@@ -108,26 +170,6 @@ class UserValidator {
                     contactId: existingContact._id
                 }
             }  
-
-            next()
-        } catch (err) {
-            next(err);
-        }
-
-    }
-
-
-    /**
-     * validation object-ID of user
-     * if user id is invalid return json with key `{"message": "missing fields"}` and send status 400
-     */
-    async validateId(req, res, next) {
-        try {
-            const userId = req.user._id;
-
-            if (!ObjectId.isValid(userId)) return res.status(400).json({
-                message: "missing fields"
-            });
 
             next()
         } catch (err) {

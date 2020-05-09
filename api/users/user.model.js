@@ -89,9 +89,7 @@ async function findContactByEmailAndUpdate(email) {
 
   if(!existingContact) return false;
 
-  await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
-  
-  return true
+  return await contactModel.findByIdAndUpdate(existingContact._id, {user: {subscription}});
 }
 
 // create users collection

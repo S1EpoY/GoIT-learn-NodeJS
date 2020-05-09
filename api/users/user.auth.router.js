@@ -17,8 +17,10 @@ const {
     validateKeys,
     validateId,
     validateEmail,
-    checkEmailForMatch,
+    validateRegistretion,
+    checkEmailForMatchesInUserDB,
     checkEmailForUniqueness,
+    checkEmailForMatchesInContactDB,
     validateAndRedirectURL
 } = require('./user.validator')
 
@@ -42,17 +44,17 @@ router.post(
     '/register', 
     validateKeys, 
     checkEmailForUniqueness, 
-    checkEmailForMatch, 
+    checkEmailForMatchesInContactDB, 
     upload.single('avatar'), 
     createAvatar, 
     minifyIMG, 
     userSignUp
     );
 
-router.post('/login', validateKeys, userLogin);
+router.post('/login', validateKeys, checkEmailForMatchesInUserDB, validateRegistretion, userLogin);
 router.post('/logout', userAuth, validateId, userLogout);
 
 router.get('/otp/:otpCode', validateAndRedirectURL, confirmedEmailUsingLink);
-router.post('/otp/:otpCode', validateEmail, confirmedEmail);
+router.post('/otp/:otpCode', validateEmail, checkEmailForMatchesInUserDB, confirmedEmail);
 
 module.exports = router;
