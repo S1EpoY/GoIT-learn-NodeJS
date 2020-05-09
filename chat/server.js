@@ -45,7 +45,7 @@ module.exports = class WebSocketServer {
     }
 
     startListening() {
-        const PORT = 3000;
+        const PORT = 4040;
 
         return this.httpServer.listen(PORT, () => {
             console.log("Server listen on port", PORT);

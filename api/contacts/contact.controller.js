@@ -21,6 +21,7 @@ class ContactController {
       }
 
       if(sub) contacts = await contactModel.paginate({user: {subscription:sub}}, options);
+      else contacts = await contactModel.paginate({}, options);
 
       res.status("200").json(contacts);
     } catch {
