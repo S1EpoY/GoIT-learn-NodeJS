@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const http = require('http');
 const path = require('path');
 const socketIo = require('socket.io');
+var favicon = require('serve-favicon');
 
 require('dotenv').config();
 
@@ -31,6 +32,7 @@ module.exports = class WebSocketServer {
         this.server.use(bodyParser.urlencoded({ extended: true })); // to support URL-encoded bodies
         this.server.use(bodyParser.json()); // to support JSON-encoded bodies
         this.server.use(express.static(path.join(__dirname, "views")));
+        this.server.use(favicon(__dirname + './../favicon.ico'));
     }
 
     initRoutes() {}

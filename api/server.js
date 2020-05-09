@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const apiContactsRoutes = require('./contacts/contact.router');
 const userRoutes = require('./users/user.router');
 const userAuthRoutes = require('./users/user.auth.router');
+const favicon = require('serve-favicon');
 
 const app = express();
 
@@ -19,7 +20,9 @@ app.use(cors());
 
 app.use('/api/contacts', apiContactsRoutes);
 app.use('/auth', userAuthRoutes);
-app.use('/users', userRoutes);    
+app.use('/users', userRoutes);
+
+app.use(favicon(__dirname + './../favicon.ico'));
 
 const PORT = process.env.PORT; 
 
